@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ISBN Scanner App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>ISBN Scanner</h1>
+
+  <label>
+    <input type="radio" name="mode" value="manual" checked>
+    Keyboard/Scanner
+  </label>
+  <label>
+    <input type="radio" name="mode" value="camera">
+    Camera (Not Yet Implemented)
+  </label>
+
+  <div id="manual-input">
+    <input type="text" id="isbn-input" placeholder="Enter or scan ISBN" autofocus />
+    <button onclick="scanISBN()">Scan</button>
+  </div>
+
+  <div>
+    <textarea id="output" rows="12" readonly></textarea>
+  </div>
+
+  <div class="controls">
+    <button onclick="downloadYAML()">Download YAML</button>
+    <label class="upload">
+      Upload ISBNs
+      <input type="file" id="isbn-upload" accept=".txt" />
+    </label>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
