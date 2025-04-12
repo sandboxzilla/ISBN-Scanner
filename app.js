@@ -1,3 +1,6 @@
+// JS Version: Jv2.3.1
+// Voice logic + scan-to-skip with 8s timeout
+
 let yamlLog = [];
 let isWaitingForVoice = false;
 let voiceTimeout = null;
