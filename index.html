@@ -8,23 +8,18 @@
 <body>
   <h1>ISBN Scanner</h1>
 
-  <label>
-    <input type="radio" name="mode" value="manual" checked>
-    Keyboard/Scanner
-  </label>
-  <label>
-    <input type="radio" name="mode" value="camera">
-    Camera (Not Yet Implemented)
-  </label>
+  <div class="input-mode">
+    <label><input type="radio" name="mode" value="manual" checked> Keyboard/Scanner</label>
+    <label><input type="radio" name="mode" value="camera"> Camera (Not Yet Implemented)</label>
+  </div>
 
   <div id="manual-input">
     <input type="text" id="isbn-input" placeholder="Enter or scan ISBN" autofocus />
+    <input type="text" id="price-input" placeholder="Optional manual price" />
     <button onclick="scanISBN()">Scan</button>
   </div>
 
-  <div>
-    <textarea id="output" rows="12" readonly></textarea>
-  </div>
+  <div id="log" class="log-container"></div>
 
   <div class="controls">
     <button onclick="downloadYAML()">Download YAML</button>
@@ -32,6 +27,7 @@
       Upload ISBNs
       <input type="file" id="isbn-upload" accept=".txt" />
     </label>
+    <button onclick="clearData()">Clear All</button>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
