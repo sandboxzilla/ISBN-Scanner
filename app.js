@@ -1,4 +1,5 @@
-// JS Version: Jv2.3.2
+// JS Version: Jv2.3.3
+window.APP_VERSION = "Jv2.3.3";
 
 let yamlLog = [];
 let isWaitingForVoice = false;
