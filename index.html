@@ -1,9 +1,9 @@
-<!-- HTML Version: Hv1.2.3 -->
+<!-- HTML Version: Hv1.2.4 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="html-version" content="Hv1.2.3" />
+  <meta name="html-version" content="Hv1.2.4" />
   <title>ISBN Scanner</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -38,9 +38,9 @@
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
   <script src="app.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener("load", () => {
       const jv = window.APP_VERSION || "Jv?";
-      const cv = getComputedStyle(document.documentElement).getPropertyValue("--css-version").replace(/["']/g, "").trim() || "Cv?";
+      const cv = getComputedStyle(document.documentElement).getPropertyValue("--css-version").trim() || "Cv?";
       const hv = document.querySelector('meta[name="html-version"]').content || "Hv?";
       document.querySelector(".version").textContent = `${jv}:${hv}:${cv}`;
     });
