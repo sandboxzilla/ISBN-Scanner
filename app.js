@@ -1,11 +1,31 @@
 let yamlLog = [];
+let isWaitingForVoice = false;
+let voiceTimeout = null;
+let pendingInfo = null;
+let pendingISBN = null;
+
 const isbnInput = document.getElementById("isbn-input");
 const priceInput = document.getElementById("price-input");
 const uploadInput = document.getElementById("isbn-upload");
 const logContainer = document.getElementById("log");
 
-isbnInput.addEventListener("keydown", e => { if (e.key === "Enter") scanISBN(); });
-priceInput.addEventListener("keydown", e => { if (e.key === "Enter") scanISBN(); });
+isbnInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    if (isWaitingForVoice) {
+      clearTimeout(voiceTimeout);
+      isWaitingForVoice = false;
+      finalizeBook(pendingInfo, pendingISBN, "Not available");
+      pendingInfo = null;
+      pendingISBN = null;
+    } else {
+      scanISBN();
+    }
+  }
+});
+
+priceInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") scanISBN();
+});
 
 document.querySelectorAll('input[name="mode"]').forEach(radio => {
   radio.addEventListener('change', () => {
@@ -14,6 +34,61 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
     if (mode === "camera") alert("Camera mode not implemented yet.");
   });
 });
+
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(utterance);
+}
+
+function listenForPrice(callback) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Speech recognition not supported in this browser.");
+    callback(null);
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript.toLowerCase();
+    isWaitingForVoice = false;
+    clearTimeout(voiceTimeout);
+
+    if (["none", "no", "continue"].includes(transcript)) {
+      callback(null);
+    } else {
+      const parsed = parseSpokenPrice(transcript);
+      callback(parsed);
+    }
+  };
+
+  recognition.onerror = () => {
+    isWaitingForVoice = false;
+    callback(null);
+  };
+
+  recognition.start();
+  isWaitingForVoice = true;
+  voiceTimeout = setTimeout(() => {
+    isWaitingForVoice = false;
+    recognition.abort();
+    callback(null);
+  }, 8000);
+}
+
+function parseSpokenPrice(input) {
+  input = input.replace(/dollars|bucks|\$/gi, "").trim();
+  if (/point|dot/.test(input)) {
+    input = input.replace(/point|dot/, ".");
+    return parseFloat(input);
+  }
+  const digits = input.replace(/[^\d.]/g, "");
+  return parseFloat(digits);
+}
 
 function scanISBN() {
   const isbn = isbnInput.value.trim();
@@ -35,26 +110,47 @@ function scanISBN() {
 
       if (manualPrice) {
         price = manualPrice;
+        finalizeBook(info, isbn, price);
       } else if (sale?.retailPrice?.amount) {
         price = sale.retailPrice.amount + " " + sale.retailPrice.currencyCode;
+        finalizeBook(info, isbn, price);
+      } else {
+        const bookTitle = info.title || "Unknown title";
+        const bookAuthor = (info.authors || ["Unknown author"]).join(", ");
+        speak(`Book title: ${bookTitle}. Author: ${bookAuthor}. Would you like to add a price?`);
+
+        pendingInfo = info;
+        pendingISBN = isbn;
+
+        listenForPrice(userPrice => {
+          let finalPrice = "Not available";
+          if (userPrice !== null && !isNaN(userPrice)) {
+            finalPrice = `$${userPrice.toFixed(2)}`;
+          }
+          finalizeBook(pendingInfo, pendingISBN, finalPrice);
+          pendingInfo = null;
+          pendingISBN = null;
+        });
       }
-
-      const book = {
-        isbn,
-        title: info.title || "Unknown",
-        authors: info.authors || ["Unknown"],
-        publisher: info.publisher || "Unknown",
-        publishedDate: info.publishedDate || "Unknown",
-        price
-      };
-
-      yamlLog.push(book);
-      renderBook(book);
-      isbnInput.value = "";
-      priceInput.value = "";
-      isbnInput.focus();
-      playTone(660);
     });
+}
+
+function finalizeBook(info, isbn, price) {
+  const book = {
+    isbn,
+    title: info.title || "Unknown",
+    authors: info.authors || ["Unknown"],
+    publisher: info.publisher || "Unknown",
+    publishedDate: info.publishedDate || "Unknown",
+    price
+  };
+
+  yamlLog.push(book);
+  renderBook(book);
+  isbnInput.value = "";
+  priceInput.value = "";
+  isbnInput.focus();
+  playTone(660);
 }
 
 function renderBook(book) {
