@@ -1,4 +1,8 @@
-/* CSS Version: Cv0.2.2 */
+/* CSS Version: Cv0.2.3 */
+:root {
+  --css-version: "Cv0.2.3";
+}
+
 body {
   font-family: 'Segoe UI', sans-serif;
   background: #f4f4f4;
