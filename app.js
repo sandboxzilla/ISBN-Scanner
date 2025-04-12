@@ -35,8 +35,9 @@ document.querySelectorAll('input[name="mode"]').forEach(radio => {
   });
 });
 
-function speak(text) {
+function speak(text, callback) {
   const utterance = new SpeechSynthesisUtterance(text);
+  utterance.onend = callback;
   speechSynthesis.speak(utterance);
 }
 
@@ -117,19 +118,21 @@ function scanISBN() {
       } else {
         const bookTitle = info.title || "Unknown title";
         const bookAuthor = (info.authors || ["Unknown author"]).join(", ");
-        speak(`Book title: ${bookTitle}. Author: ${bookAuthor}. Would you like to add a price?`);
+        const prompt = `Book title: ${bookTitle}. Author: ${bookAuthor}. Would you like to add a price?`;
 
         pendingInfo = info;
         pendingISBN = isbn;
 
-        listenForPrice(userPrice => {
-          let finalPrice = "Not available";
-          if (userPrice !== null && !isNaN(userPrice)) {
-            finalPrice = `$${userPrice.toFixed(2)}`;
-          }
-          finalizeBook(pendingInfo, pendingISBN, finalPrice);
-          pendingInfo = null;
-          pendingISBN = null;
+        speak(prompt, () => {
+          listenForPrice(userPrice => {
+            let finalPrice = "Not available";
+            if (userPrice !== null && !isNaN(userPrice)) {
+              finalPrice = `$${userPrice.toFixed(2)}`;
+            }
+            finalizeBook(pendingInfo, pendingISBN, finalPrice);
+            pendingInfo = null;
+            pendingISBN = null;
+          });
         });
       }
     });
