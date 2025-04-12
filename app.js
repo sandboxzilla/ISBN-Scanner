@@ -3,6 +3,13 @@ const output = document.getElementById("output");
 const isbnInput = document.getElementById("isbn-input");
 const uploadInput = document.getElementById("isbn-upload");
 
+// ✅ Trigger scan on Enter key (LF or CR from scanner)
+isbnInput.addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
+    scanISBN();
+  }
+});
+
 document.querySelectorAll('input[name="mode"]').forEach(radio => {
   radio.addEventListener('change', () => {
     const mode = document.querySelector('input[name="mode"]:checked').value;
@@ -62,7 +69,7 @@ uploadInput.addEventListener("change", () => {
       setTimeout(() => {
         isbnInput.value = isbn;
         scanISBN();
-      }, i * 800); // delay to prevent throttling
+      }, i * 800);
     });
   };
   reader.readAsText(file);
