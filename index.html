@@ -1,9 +1,9 @@
-<!-- HTML Version: Hv1.2.2 -->
+<!-- HTML Version: Hv1.2.3 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="html-version" content="Hv1.2.2" />
+  <meta name="html-version" content="Hv1.2.3" />
   <title>ISBN Scanner</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -38,14 +38,11 @@
   <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
   <script src="app.js"></script>
   <script>
-    Promise.all([
-      fetch('app.js').then(r => r.text()),
-      fetch('style.css').then(r => r.text())
-    ]).then(([js, css]) => {
-      const jv = (js.match(/Jv\\d+\\.\\d+\\.\\d+/) || ['Jv?'])[0];
-      const cv = (css.match(/Cv\\d+\\.\\d+\\.\\d+/) || ['Cv?'])[0];
-      const hv = document.querySelector('meta[name="html-version"]').content || 'Hv?';
-      document.querySelector('.version').textContent = `${jv}:${hv}:${cv}`;
+    document.addEventListener("DOMContentLoaded", () => {
+      const jv = window.APP_VERSION || "Jv?";
+      const cv = getComputedStyle(document.documentElement).getPropertyValue("--css-version").replace(/["']/g, "").trim() || "Cv?";
+      const hv = document.querySelector('meta[name="html-version"]').content || "Hv?";
+      document.querySelector(".version").textContent = `${jv}:${hv}:${cv}`;
     });
   </script>
 </body>
