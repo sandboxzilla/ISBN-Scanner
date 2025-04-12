@@ -1,5 +1,4 @@
-// JS Version: Jv2.3.1
-// Voice logic + scan-to-skip with 8s timeout
+// JS Version: Jv2.3.2
 
 let yamlLog = [];
 let isWaitingForVoice = false;
@@ -15,6 +14,7 @@ const logContainer = document.getElementById("log");
 isbnInput.addEventListener("keydown", e => {
   if (e.key === "Enter") {
     if (isWaitingForVoice) {
+      playTone(400); // stop tone
       clearTimeout(voiceTimeout);
       isWaitingForVoice = false;
       finalizeBook(pendingInfo, pendingISBN, "Not available");
@@ -58,10 +58,11 @@ function listenForPrice(callback) {
   recognition.maxAlternatives = 1;
 
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript.toLowerCase();
+    playTone(440); // stop listening tone
     isWaitingForVoice = false;
     clearTimeout(voiceTimeout);
 
+    const transcript = event.results[0][0].transcript.toLowerCase();
     if (["none", "no", "continue"].includes(transcript)) {
       callback(null);
     } else {
@@ -71,13 +72,16 @@ function listenForPrice(callback) {
   };
 
   recognition.onerror = () => {
+    playTone(400);
     isWaitingForVoice = false;
     callback(null);
   };
 
   recognition.start();
+  playTone(880); // start listening tone
   isWaitingForVoice = true;
   voiceTimeout = setTimeout(() => {
+    playTone(400);
     isWaitingForVoice = false;
     recognition.abort();
     callback(null);
@@ -98,7 +102,7 @@ function scanISBN() {
   const isbn = isbnInput.value.trim();
   const manualPrice = priceInput.value.trim();
   if (!isbn) return;
-  playTone(440);
+  playTone(600); // scan received
 
   fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`)
     .then(res => res.json())
@@ -112,15 +116,26 @@ function scanISBN() {
       const sale = data.items[0].saleInfo;
       let price = "Not available";
 
+      const book = {
+        isbn,
+        title: info.title || "Unknown",
+        authors: info.authors || ["Unknown"],
+        publisher: info.publisher || "Unknown",
+        publishedDate: info.publishedDate || "Unknown",
+        price
+      };
+
+      renderBook(book); // display info immediately
+
       if (manualPrice) {
-        price = manualPrice;
-        finalizeBook(info, isbn, price);
+        book.price = manualPrice;
+        finalizeBook(info, isbn, manualPrice);
       } else if (sale?.retailPrice?.amount) {
-        price = sale.retailPrice.amount + " " + sale.retailPrice.currencyCode;
-        finalizeBook(info, isbn, price);
+        book.price = sale.retailPrice.amount + " " + sale.retailPrice.currencyCode;
+        finalizeBook(info, isbn, book.price);
       } else {
-        const bookTitle = info.title || "Unknown title";
-        const bookAuthor = (info.authors || ["Unknown author"]).join(", ");
+        const bookTitle = book.title;
+        const bookAuthor = book.authors.join(", ");
         const prompt = `Book title: ${bookTitle}. Author: ${bookAuthor}. Would you like to add a price?`;
 
         pendingInfo = info;
@@ -142,17 +157,15 @@ function scanISBN() {
 }
 
 function finalizeBook(info, isbn, price) {
-  const book = {
+  yamlLog.push({
     isbn,
     title: info.title || "Unknown",
     authors: info.authors || ["Unknown"],
     publisher: info.publisher || "Unknown",
     publishedDate: info.publishedDate || "Unknown",
     price
-  };
+  });
 
-  yamlLog.push(book);
-  renderBook(book);
   isbnInput.value = "";
   priceInput.value = "";
   isbnInput.focus();
